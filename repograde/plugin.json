@@ -1,0 +1,12 @@
+{
+  "id": "at.mfreimueller.repograde",
+  "name": "Repograde",
+  "version": "1.0.0",
+  "description": "Bewertet GitHub-Classroom-Projekte nach Umfang der Commits (PLUS/MINUS)",
+  "apiVersion": 1,
+  "entry": "index.html",
+  "launch": ["course"],
+  "permissions": ["course:read", "storage", "secrets", "assessment:impromptu"],
+  "network": ["https://api.github.com"],
+  "window": { "width": 1100, "height": 760 }
+}

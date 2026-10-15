@@ -1,0 +1,25 @@
+{
+  "name": "repograde-grader-plugin",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Grader plugin: grade GitHub Classroom repositories by commit size.",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vue-tsc --noEmit && vite build",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "vue-tsc --noEmit"
+  },
+  "dependencies": {
+    "vue": "3.5.35"
+  },
+  "devDependencies": {
+    "@types/node": "22.15.17",
+    "@vitejs/plugin-vue": "6.0.7",
+    "typescript": "5.9.3",
+    "vite": "8.0.14",
+    "vitest": "5.0.4",
+    "vue-tsc": "3.3.13"
+  }
+}
