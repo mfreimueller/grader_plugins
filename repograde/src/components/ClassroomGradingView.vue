@@ -10,6 +10,7 @@ import { checkAssignment } from '../core/classroomRun';
 import type { ClassroomData } from '../core/classroomRemote';
 import { alreadyEntered, type AssignmentRuns, type GithubUsers } from '../core/classroomStore';
 import { createGithubClient } from '../core/github';
+import { withoutAbsent } from '../core/grading';
 import { sessionTarget, type DateRange } from '../core/range';
 import { effectiveMapping } from '../core/nameMatch';
 import { loadToken, type Settings } from '../core/store';
@@ -38,6 +39,15 @@ const message = ref('');
 const warnings = ref<string[]>([]);
 const confirming = ref(false);
 const preview = ref<{ result: ClassroomGradingResult; range: DateRange; slug: string; title: string } | null>(null);
+// Students marked absent get no assessment. Kept across checks, so re-checking does not lose the marks.
+const absent = ref(new Set<string>());
+const grades = computed(() => withoutAbsent(preview.value?.result.grades ?? [], absent.value));
+
+function toggleAbsent(studentId: string): void {
+  const next = new Set(absent.value);
+  if (!next.delete(studentId)) next.add(studentId);
+  absent.value = next;
+}
 
 const selected = computed(() => assignments.value.find((a) => a.slug === slug.value) ?? null);
 const isGroup = computed(() => selected.value !== null && selected.value.mode !== 'individual');
@@ -152,7 +162,7 @@ async function commit(confirmed: boolean): Promise<void> {
       {
         slug: current.slug,
         title: current.title,
-        grades: current.result.grades,
+        grades: grades.value,
         categoryId: props.settings.categoryId,
         session: sessionTarget(props.settings.sessionMode, current.range),
         from: current.range.from,
@@ -226,7 +236,7 @@ async function undo(): Promise<void> {
         </div>
         <div class="actions">
           <button :disabled="busy || !selected" @click="check">Prüfen</button>
-          <button v-if="preview" :disabled="busy || preview.result.grades.length === 0" @click="commit(false)">Eintragen</button>
+          <button v-if="preview" :disabled="busy || grades.length === 0" @click="commit(false)">Eintragen</button>
           <button v-if="entered" class="secondary" :disabled="busy" @click="undo">Rückgängig</button>
           <span v-if="progress" class="muted">{{ progress }}</span>
         </div>
@@ -244,36 +254,44 @@ async function undo(): Promise<void> {
       <template v-if="preview">
         <h2>Vorschau: {{ preview.title }}</h2>
         <p v-if="preview.result.rows.length === 0" class="muted">Keine zugeordneten Schüler/innen. Siehe Tab „Zuordnung“.</p>
-        <table v-else>
-          <thead>
-            <tr>
-              <th>Schüler/in</th><th>Repository</th>
-              <th class="num">Hinzugefügt</th><th class="num">Entfernt</th><th class="num">Gesamt</th>
-              <th>Ergebnis</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="row in preview.result.rows" :key="row.username">
-              <td>{{ row.studentName }}</td>
-              <td>{{ row.repo }}</td>
-              <td class="num">{{ row.added }}</td>
-              <td class="num">{{ row.removed }}</td>
-              <td class="num">{{ row.total }}</td>
-              <td>
-                <span v-if="row.status === 'error'" class="error">Fehler: {{ row.error }} (übersprungen)</span>
-                <template v-else-if="row.status !== 'graded'">
-                  <span class="fail">MINUS</span> <span class="muted">{{ statusText[row.status] }}</span>
-                </template>
-                <span v-else-if="row.passes" class="pass">PASS</span>
-                <span v-else class="fail">FAIL</span>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+        <template v-else>
+          <p class="muted">Abwesende Schüler/innen ankreuzen: Sie erhalten keine Beurteilung.</p>
+          <table>
+            <thead>
+              <tr>
+                <th>Schüler/in (abwesend)</th><th>Repository</th>
+                <th class="num">Hinzugefügt</th><th class="num">Entfernt</th><th class="num">Gesamt</th>
+                <th>Ergebnis</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="row in preview.result.rows" :key="row.username" :class="{ absent: absent.has(row.studentId) }">
+                <td>
+                  <label class="absent-toggle">
+                    <input type="checkbox" :checked="absent.has(row.studentId)" @change="toggleAbsent(row.studentId)" />
+                    {{ row.studentName }}
+                  </label>
+                </td>
+                <td>{{ row.repo }}</td>
+                <td class="num">{{ row.added }}</td>
+                <td class="num">{{ row.removed }}</td>
+                <td class="num">{{ row.total }}</td>
+                <td>
+                  <span v-if="row.status === 'error'" class="error">Fehler: {{ row.error }} (übersprungen)</span>
+                  <template v-else-if="row.status !== 'graded'">
+                    <span class="fail">MINUS</span> <span class="muted">{{ statusText[row.status] }}</span>
+                  </template>
+                  <span v-else-if="row.passes" class="pass">PASS</span>
+                  <span v-else class="fail">FAIL</span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </template>
         <p>
-          Es werden {{ preview.result.grades.length }} Beurteilungen eingetragen
-          ({{ preview.result.grades.filter((g) => g.symbol === 'PLUS').length }} × +,
-          {{ preview.result.grades.filter((g) => g.symbol === 'MINUS').length }} × −).
+          Es werden {{ grades.length }} Beurteilungen eingetragen
+          ({{ grades.filter((g) => g.symbol === 'PLUS').length }} × +,
+          {{ grades.filter((g) => g.symbol === 'MINUS').length }} × −).
         </p>
         <p v-if="preview.result.unmappedUsers.length > 0" class="muted">
           Nicht zugeordnete Benutzer (nicht bewertet): {{ preview.result.unmappedUsers.map((u) => u.username).join(', ') }}

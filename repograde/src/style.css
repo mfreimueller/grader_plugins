@@ -205,3 +205,18 @@ main {
   color: var(--color-danger);
   font-weight: 600;
 }
+
+.absent-toggle {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  cursor: pointer;
+}
+
+/* Absent students get no assessment: their row (or name, in a team) is greyed out. */
+.absent,
+.absent .pass,
+.absent .fail,
+.absent .muted {
+  color: var(--color-disabled);
+}

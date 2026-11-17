@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { gradeRepos, type GradingInput } from '../../src/core/grading';
+import { gradeRepos, withoutAbsent, type GradingInput } from '../../src/core/grading';
 import type { PluginStudent } from '../../src/window';
 
 const student = (id: string, firstName = id, lastName = 'Muster'): PluginStudent => ({ id, firstName, lastName, color: null });
@@ -116,5 +116,21 @@ describe('gradeRepos', () => {
       const { grades } = gradeRepos(input({ outcomes: [ok('team-a', 99, 0), failed('team-b')], repoMapping: mapping }));
       expect(grades.map((g) => g.symbol)).toEqual(['PLUS']);
     });
+  });
+});
+
+describe('withoutAbsent', () => {
+  const grades = [
+    { studentId: 's1', symbol: 'PLUS' as const, repo: 'team-a' },
+    { studentId: 's2', symbol: 'MINUS' as const, repo: 'team-a' },
+    { studentId: 's3', symbol: 'MINUS' as const, repo: 'team-b' },
+  ];
+
+  it('drops the grades of absent students, whatever the symbol', () => {
+    expect(withoutAbsent(grades, new Set(['s2', 's1'])).map((g) => g.studentId)).toEqual(['s3']);
+  });
+
+  it('keeps everything when nobody is absent', () => {
+    expect(withoutAbsent(grades, new Set())).toEqual(grades);
   });
 });

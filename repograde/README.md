@@ -68,7 +68,8 @@ shared by all courses. A Grader backup restored on another computer cannot decry
    previous assignment's due date, else 14 days before the end) to `due` (else now), capped at now, and editable.
    **Commits after the deadline do not count.** *Prüfen* shows per student: repository, added, removed, total and
    PASS/FAIL. No repository (never accepted) or an empty one gives MINUS; a repository that cannot be read is skipped
-   and listed. *Eintragen* creates one `+`/`−` per matched student, titled like the assignment, in the session chosen in
+   and listed. Tick the checkbox next to an absent student's name: the row is greyed out and that student gets no
+   assessment at all (no `−`). *Eintragen* creates one `+`/`−` per matched student, titled like the assignment, in the session chosen in
    the settings (the due date if it has passed, else today). An assignment entered before asks
    *„Bereits eingetragen – erneut eintragen?“* and replaces its earlier assessments; *„Rückgängig“* deletes them.
    Group assignments (mode other than `individual`) are not supported yet; the view offers to switch to manual mode.
@@ -81,7 +82,7 @@ assignments whose slug starts with another slug cannot be confused.
 1. **Einstellungen:** organization, repository prefix, minimum commit size, category and target session.
 2. **Zuordnung:** assign students to each repository. The project name is the repository name without the prefix.
 3. **Bewertung:** choose *Seit dem letzten Lauf* (first run: last 7 days) or a date range, press *Prüfen* for a
-   preview (nothing is written), then *Eintragen*. *Letzten Lauf rückgängig* deletes the assessments of the last run.
+   preview (nothing is written), tick absent students (greyed out, no assessment), then *Eintragen*. *Letzten Lauf rückgängig* deletes the assessments of the last run.
 
 ## Layout
 

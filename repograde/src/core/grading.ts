@@ -100,3 +100,8 @@ export function gradeRepos(input: GradingInput): GradingResult {
     studentsWithoutRepo: input.students.filter((s) => !rowsOfStudent.has(s.id)),
   };
 }
+
+/** The grades without the students marked absent: they get no assessment at all, neither PLUS nor MINUS. */
+export function withoutAbsent(grades: StudentGrade[], absent: ReadonlySet<string>): StudentGrade[] {
+  return grades.filter((g) => !absent.has(g.studentId));
+}
